@@ -1,0 +1,25 @@
+What would happen if you used notify() instead of notifyAll()? Why might this cause problems?
+  If you have multiple producers and multiple consumers, notify() wakes up only one randomly chosen waiting thread. A producer might 
+  accidentally wake up another producer instead of a consumer. If the buffer is full, the awakened producer will just go back to sleep, and 
+  the system could deadlock because the consumers were never notified. notifyAll() is safer because it wakes up everyone, ensuring the right 
+  type of thread gets a chance to proceed.
+
+Why must wait() be called inside a while loop rather than an if statement? What problem does this solve?
+  When a thread wakes up from wait(), it does not immediately execute; it must first re-acquire the lock. By the time it gets the lock, 
+  another thread might have already changed the state of the buffer. Additionally, threads can experience "spurious wakeups". The while loop 
+  forces the thread to re-verify the condition before continuing.
+
+What would happen if the produce() method wasn't synchronized? Could two producers add items at the same time? 
+  Yes, a "race condition" would occur. Two producers could check the buffer size simultaneously, see that there is space, and then both 
+  attempt to add an item at the same time. This could result in overwritten data, an IndexOutOfBoundsException, or the buffer exceeding its 
+  maximum capacity.
+
+What happens if you forget to call notifyAll() in the produce() method? How would this affect the consumer thread? 
+  If the buffer starts empty, the consumer will call wait() and go to sleep. If the producer adds items but never calls notifyAll(), the 
+  consumer will never be signaled to wake up. The consumer will sleep infinitely, resulting in a deadlock once the producer eventually fills 
+  the buffer and goes to sleep as well.
+
+Why does wait() release the lock? What would happen if it didn't? 
+  If a thread went to sleep while holding the lock, no other thread would ever be able to access the synchronized methods. For example, 
+  if a consumer sees an empty buffer and goes to sleep holding the lock, the producer could never enter the produce() method to add items. 
+  The entire application would instantly deadlock.
